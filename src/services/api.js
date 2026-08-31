@@ -8,9 +8,6 @@ const api = axios.create({
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
-// The API returns geographic data as an object while the existing UI renders a
-// human-readable address. Keep that translation in one place so every screen
-// consumes the same stable shape.
 export const toIssueView = (issue) => ({
   ...issue,
   id: issue.id || issue._id,
@@ -30,19 +27,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Global 401 handler: clear stale auth and redirect to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Only redirect if not already on an auth page
+      if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/') {
+        window.location.href = '/login?session=expired';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => api.post('/auth/register', userData),
 };
 
 export const issueAPI = {
-  getAll: () => api.get('/issues'),
+  getAll: (params) => api.get('/issues', { params }),
   getUserIssues: () => api.get('/issues/user'),
+  getById: (id) => api.get(`/issues/${id}`),
   create: (formData) => api.post('/issues', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  updateStatus: (id, status) => api.patch(`/issues/${id}/status`, { status }),
+  updateStatus: (id, status, note) => api.patch(`/issues/${id}/status`, { status, note }),
   getStats: () => api.get('/issues/stats'),
+  getHeatmap: () => api.get('/issues/heatmap'),
 };
 
 export default api;

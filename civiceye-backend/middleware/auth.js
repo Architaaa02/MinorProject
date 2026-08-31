@@ -40,7 +40,7 @@ function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403);
-      throw new Error(`Forbidden: requires role(s): ${roles.join(', ')}`);
+      return next(new Error(`Forbidden: requires role(s): ${roles.join(', ')}`));
     }
     next();
   };

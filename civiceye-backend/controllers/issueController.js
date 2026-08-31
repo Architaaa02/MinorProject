@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs/promises");
 const crypto = require("crypto");
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 
 const Issue = require("../models/Issue");
 const { detectLabels } = require("../services/visionService");
@@ -105,6 +106,10 @@ const getMyIssues = asyncHandler(async (req, res) => {
 
 // GET /api/issues/:id - single issue (owner or admin)
 const getIssueById = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    res.status(400);
+    throw new Error("Invalid issue ID");
+  }
   const issue = await Issue.findById(req.params.id);
   if (!issue) {
     res.status(404);
@@ -116,6 +121,11 @@ const getIssueById = asyncHandler(async (req, res) => {
   if (!isOwner && !isAdmin) {
     res.status(403);
     throw new Error("Forbidden");
+  }
+  // Department-scoped admin must not access another department's issue
+  if (req.user.role === "admin" && req.user.department && issue.department !== req.user.department) {
+    res.status(403);
+    throw new Error("Forbidden: issue is outside your department");
   }
 
   res.json({ success: true, issue: issue.toClientObject() });
@@ -187,6 +197,11 @@ const updateIssueStatus = asyncHandler(async (req, res) => {
   if (!validStatuses.includes(status)) {
     res.status(400);
     throw new Error(`status must be one of: ${validStatuses.join(", ")}`);
+  }
+
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    res.status(400);
+    throw new Error("Invalid issue ID");
   }
 
   const issue = await Issue.findById(req.params.id);

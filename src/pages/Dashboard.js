@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { issueAPI, toIssueView } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import IssueCard from '../components/IssueCard';
+import IssueDetailModal from '../components/IssueDetailModal';
 import Input from '../components/Input';
 import Loading from '../components/Loading';
 
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [selectedIssue, setSelectedIssue] = useState(null);
 
   useEffect(() => {
     fetchIssues();
@@ -54,10 +56,11 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!imageFile) {
-      alert('Please select an image before submitting.');
+      setError('Please select an image before submitting.');
       return;
     }
     setSubmitting(true);
+    setError('');
 
     const data = new FormData();
     data.append('title', formData.title);
@@ -98,7 +101,7 @@ const Dashboard = () => {
               <p className="text-emerald-100 mt-1 text-sm">Track and manage your reported civic issues</p>
             </div>
             <button
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => { setShowForm(!showForm); setError(''); }}
               className="flex items-center gap-2 bg-white text-emerald-700 font-semibold px-5 py-2.5 rounded-xl hover:bg-emerald-50 transition-colors shadow"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,8 +127,8 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      <div className="container mx-auto px-4 py-8">
 
+      <div className="container mx-auto px-4 py-8">
         {error && (
           <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
             {error}
@@ -144,7 +147,7 @@ const Dashboard = () => {
                 placeholder="Brief description of the issue"
                 required
               />
-              
+
               <div className="mb-4">
                 <label className="block text-gray-700 font-medium mb-2">
                   Description <span className="text-danger">*</span>
@@ -187,7 +190,7 @@ const Dashboard = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <p className="text-sm text-gray-500">Click to upload or drag & drop</p>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</p>
+                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP up to 8MB</p>
                     </div>
                   )}
                   <input
@@ -228,12 +231,24 @@ const Dashboard = () => {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {issues.map((issue) => (
-                <IssueCard key={issue.id} issue={issue} />
+                <IssueCard
+                  key={issue.id}
+                  issue={issue}
+                  onClick={() => setSelectedIssue(issue)}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {selectedIssue && (
+        <IssueDetailModal
+          issue={selectedIssue}
+          onClose={() => setSelectedIssue(null)}
+          readOnly={true}
+        />
+      )}
     </div>
   );
 };

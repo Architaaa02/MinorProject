@@ -16,7 +16,6 @@ const StatCard = ({ label, value, color }) => (
 
 const Sidebar = ({ active, setActive, onLogout, sidebarOpen, setSidebarOpen }) => (
   <>
-    {/* Mobile overlay */}
     {sidebarOpen && (
       <div className="fixed inset-0 bg-black bg-opacity-40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
     )}
@@ -98,17 +97,16 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = () => { logout(); navigate('/admin/login'); };
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
-  const handleStatusChange = async (id, status) => {
-    try {
-      const response = await issueAPI.updateStatus(id, status);
-      const updatedIssue = toIssueView(response.data.issue);
-      setIssues(prev => prev.map(i => i.id === id ? { ...i, ...updatedIssue } : i));
-      setSelectedIssue(prev => prev?.id === id ? { ...prev, ...updatedIssue } : prev);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Could not update this issue.');
-    }
+  const handleStatusChange = async (id, status, note) => {
+    const response = await issueAPI.updateStatus(id, status, note);
+    const updatedIssue = toIssueView(response.data.issue);
+    setIssues(prev => prev.map(i => i.id === id ? { ...i, ...updatedIssue } : i));
+    setSelectedIssue(prev => prev?.id === id ? { ...prev, ...updatedIssue } : prev);
   };
 
   const filtered = useMemo(() => {
@@ -140,7 +138,6 @@ const AdminDashboard = () => {
         setSidebarOpen={setSidebarOpen}
       />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
         <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -173,45 +170,36 @@ const AdminDashboard = () => {
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden">
-                  {/* Profile Header */}
                   <div className="bg-blue-900 px-4 py-4 flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
                       {user?.name?.[0]?.toUpperCase() || 'A'}
                     </div>
                     <div>
                       <p className="text-white font-semibold text-sm">{user?.name || 'Admin'}</p>
-                      <p className="text-blue-300 text-xs">{user?.email || 'admin@civiceye.com'}</p>
-                      <span className="inline-block mt-1 text-xs bg-blue-700 text-blue-100 px-2 py-0.5 rounded-full">Administrator</span>
+                      <p className="text-blue-300 text-xs">{user?.email || ''}</p>
+                      <span className="inline-block mt-1 text-xs bg-blue-700 text-blue-100 px-2 py-0.5 rounded-full">
+                        {user?.role === 'system_admin' ? 'System Admin' : 'Administrator'}
+                      </span>
                     </div>
                   </div>
-                  {/* Menu Items */}
                   <div className="py-2">
                     <button
                       onClick={() => { setActive('Dashboard'); setProfileOpen(false); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
                       Dashboard
                     </button>
                     <button
                       onClick={() => { setActive('Issues'); setProfileOpen(false); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
                       Manage Issues
                     </button>
                     <div className="border-t border-gray-100 my-1" />
                     <button
-                      onClick={() => { logout(); navigate('/login'); }}
+                      onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
                       Logout
                     </button>
                   </div>
@@ -231,7 +219,6 @@ const AdminDashboard = () => {
 
           {active === 'Dashboard' && (
             <div>
-              {/* Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <StatCard label="Total Issues" value={liveStats.total} color="text-blue-600" />
                 <StatCard label="Pending" value={liveStats.pending} color="text-blue-500" />
@@ -239,7 +226,6 @@ const AdminDashboard = () => {
                 <StatCard label="Resolved" value={liveStats.resolved} color="text-green-500" />
               </div>
 
-              {/* Recent Issues Preview */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-semibold text-gray-800">Recent Issues</h3>
@@ -248,10 +234,19 @@ const AdminDashboard = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {issues.slice(0, 4).map(issue => (
-                    <div key={issue.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                  {issues.slice(0, 5).map(issue => (
+                    <div
+                      key={issue.id}
+                      className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-gray-50 rounded px-2"
+                      onClick={() => setSelectedIssue(issue)}
+                    >
                       <div className="flex items-center gap-3">
-                        <img src={issue.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                        <img
+                          src={issue.imageUrl}
+                          alt=""
+                          className="w-10 h-10 rounded-lg object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
                         <div>
                           <p className="text-sm font-medium text-gray-800">{issue.title}</p>
                           <p className="text-xs text-gray-400">{issue.location}</p>
@@ -260,6 +255,9 @@ const AdminDashboard = () => {
                       <StatusBadge status={issue.status} />
                     </div>
                   ))}
+                  {issues.length === 0 && !loading && (
+                    <p className="text-sm text-gray-400 text-center py-4">No issues yet.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -328,7 +326,12 @@ const AdminDashboard = () => {
                         {filtered.map(issue => (
                           <tr key={issue.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4">
-                              <img src={issue.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                              <img
+                                src={issue.imageUrl}
+                                alt=""
+                                className="w-12 h-12 rounded-lg object-cover"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
                             </td>
                             <td className="px-6 py-4">
                               <p className="text-sm font-medium text-gray-800">{issue.title}</p>
@@ -343,21 +346,12 @@ const AdminDashboard = () => {
                               <StatusBadge status={issue.status} />
                             </td>
                             <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                <select
-                                  value={issue.status}
-                                  onChange={(e) => handleStatusChange(issue.id, e.target.value)}
-                                  className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
-                                >
-                                  {STATUSES.map(s => <option key={s}>{s}</option>)}
-                                </select>
-                                <button
-                                  onClick={() => setSelectedIssue(issue)}
-                                  className="text-xs px-3 py-1 bg-blue-50 text-primary rounded hover:bg-blue-100 transition-colors font-medium"
-                                >
-                                  View
-                                </button>
-                              </div>
+                              <button
+                                onClick={() => setSelectedIssue(issue)}
+                                className="text-xs px-3 py-1 bg-blue-50 text-primary rounded hover:bg-blue-100 transition-colors font-medium"
+                              >
+                                View / Update
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -365,9 +359,6 @@ const AdminDashboard = () => {
                     </table>
                     {filtered.length === 0 && (
                       <div className="text-center py-12 text-gray-400">
-                        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
                         <p className="text-sm">No issues match your filters</p>
                       </div>
                     )}
@@ -379,12 +370,12 @@ const AdminDashboard = () => {
         </main>
       </div>
 
-      {/* Issue Detail Modal */}
       {selectedIssue && (
         <IssueDetailModal
           issue={selectedIssue}
           onClose={() => setSelectedIssue(null)}
           onStatusChange={handleStatusChange}
+          readOnly={false}
         />
       )}
     </div>

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import Input from '../components/Input';
-import Button from '../components/Button';
 
 const Login = () => {
   const [role, setRole] = useState('user');
@@ -12,6 +11,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('session') === 'expired';
 
   const isAdmin = role === 'admin';
 
@@ -25,7 +26,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const response = await authAPI.login({ ...formData, role });
+      const response = await authAPI.login(formData);
       const user = response.data.user;
       if (isAdmin && !['admin', 'system_admin'].includes(user.role)) {
         setError('Access denied. This account does not have admin privileges.');
@@ -87,6 +88,11 @@ const Login = () => {
 
         {/* Form */}
         <div className="p-8">
+          {sessionExpired && (
+            <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-4 text-sm">
+              Your session has expired. Please log in again.
+            </div>
+          )}
           {error && (
             <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
               {error}
