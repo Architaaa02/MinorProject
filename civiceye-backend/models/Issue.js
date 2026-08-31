@@ -44,6 +44,7 @@ const issueSchema = new mongoose.Schema(
     citizen: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
     // --- Submission (Section V.C, User Submission Module) ---
+    title: { type: String, required: true, trim: true, maxlength: 160 },
     description: { type: String, trim: true, maxlength: 1000 },
     imageUrl: { type: String, required: true },
     location: {
@@ -89,6 +90,7 @@ issueSchema.index({ citizen: 1 });
 issueSchema.methods.toClientObject = function toClientObject() {
   return {
     id: this._id,
+    title: this.title,
     description: this.description,
     imageUrl: this.imageUrl,
     location: {

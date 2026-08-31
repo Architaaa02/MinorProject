@@ -23,15 +23,15 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="text-gray-700 hover:text-primary">
+                <Link to={['admin', 'system_admin'].includes(user.role) ? '/admin' : '/dashboard'} className="text-gray-700 hover:text-primary">
                   Dashboard
                 </Link>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-600 text-sm">Hi, {user.name}</span>
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                    user.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+                    ['admin', 'system_admin'].includes(user.role) ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
                   }`}>
-                    {user.role === 'admin' ? 'Admin' : 'User'}
+                    {['admin', 'system_admin'].includes(user.role) ? 'Admin' : 'Citizen'}
                   </span>
                 </div>
                 <Button variant="outline" onClick={handleLogout}>

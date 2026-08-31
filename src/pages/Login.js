@@ -27,20 +27,13 @@ const Login = () => {
     try {
       const response = await authAPI.login({ ...formData, role });
       const user = response.data.user;
-      if (isAdmin && user.role !== 'admin') {
+      if (isAdmin && !['admin', 'system_admin'].includes(user.role)) {
         setError('Access denied. This account does not have admin privileges.');
         return;
       }
       login(user, response.data.token);
-      navigate(user.role === 'admin' ? '/admin' : '/dashboard');
+      navigate(['admin', 'system_admin'].includes(user.role) ? '/admin' : '/dashboard');
     } catch (err) {
-      if (!err.response) {
-        // Mock fallback
-        const mockUser = { id: Date.now(), name: isAdmin ? 'Admin User' : 'Demo User', email: formData.email, role };
-        login(mockUser, 'mock-token');
-        navigate(isAdmin ? '/admin' : '/dashboard');
-        return;
-      }
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);

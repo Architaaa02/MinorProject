@@ -24,8 +24,8 @@ const Register = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
@@ -48,13 +48,6 @@ const Register = () => {
       login(response.data.user, response.data.token);
       navigate('/dashboard');
     } catch (err) {
-      // Mock fallback when backend is unavailable
-      if (!err.response) {
-        const mockUser = { id: Date.now(), name: formData.name, email: formData.email, role: 'user' };
-        login(mockUser, 'mock-token');
-        navigate('/dashboard');
-        return;
-      }
       setErrors({ submit: err.response?.data?.message || 'Registration failed' });
     } finally {
       setLoading(false);

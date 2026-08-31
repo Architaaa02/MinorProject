@@ -12,14 +12,14 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div></div>;
   if (!user) return <Navigate to="/login" />;
-  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" />;
+  if (adminOnly && !['admin', 'system_admin'].includes(user.role)) return <Navigate to="/dashboard" />;
   return children;
 };
 
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div></div>;
-  if (user) return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} />;
+  if (user) return <Navigate to={['admin', 'system_admin'].includes(user.role) ? '/admin' : '/dashboard'} />;
   return children;
 };
 

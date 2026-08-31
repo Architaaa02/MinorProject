@@ -93,7 +93,7 @@ All endpoints are prefixed with `/api`. Protected routes require
 | POST | `/auth/register` | public | Create a citizen account |
 | POST | `/auth/login` | public | Authenticate, returns JWT |
 | GET | `/auth/me` | authenticated | Current user profile |
-| POST | `/issues` | citizen | Submit a complaint (`multipart/form-data`: `image`, `description`, `lat`, `lng`, `address`) |
+| POST | `/issues` | citizen | Submit a complaint (`multipart/form-data`: `image`, `title`, `description`, `lat`, `lng`, `address`) |
 | GET | `/issues/user` | citizen | List the caller's own complaints |
 | GET | `/issues/:id` | owner or admin | Fetch a single complaint |
 | GET | `/issues` | admin | List/filter all complaints (`status`, `category`, `department`, `severity`, `page`, `limit`) |
@@ -112,6 +112,7 @@ department's complaints on `/issues`, `/issues/stats`, and `/issues/heatmap`.
 curl -X POST http://localhost:5000/api/issues \
   -H "Authorization: Bearer $TOKEN" \
   -F "image=@pothole.jpg" \
+  -F "title=Pothole on Main Street" \
   -F "description=Large pothole blocking half the lane" \
   -F "lat=22.3072" \
   -F "lng=73.1812" \

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { issueAPI } from '../services/api';
-import { mockIssues } from '../utils/mockData';
+import { issueAPI, toIssueView } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import IssueCard from '../components/IssueCard';
 import Input from '../components/Input';
@@ -15,11 +14,13 @@ const Dashboard = () => {
     title: '',
     description: '',
     location: '',
-    category: 'Road Maintenance'
+    lat: '',
+    lng: ''
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchIssues();
@@ -29,10 +30,9 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const response = await issueAPI.getUserIssues();
-      setIssues(response.data);
+      setIssues((response.data.issues || []).map(toIssueView));
     } catch (err) {
-      // Use mock data if API fails
-      setIssues(mockIssues.filter(issue => issue.userId === 1));
+      setError(err.response?.data?.message || 'Could not load your reported issues.');
     } finally {
       setLoading(false);
     }
@@ -40,6 +40,7 @@ const Dashboard = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
   };
 
   const handleImageChange = (e) => {
@@ -61,30 +62,21 @@ const Dashboard = () => {
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
-    data.append('location', formData.location);
-    data.append('category', formData.category);
+    data.append('address', formData.location);
+    data.append('lat', formData.lat);
+    data.append('lng', formData.lng);
     data.append('image', imageFile);
 
     try {
-      await issueAPI.create(data);
-      fetchIssues();
-    } catch (err) {
-      // Mock fallback when backend is unavailable
-      const mockIssue = {
-        id: Date.now(),
-        ...formData,
-        imageUrl: imagePreview,
-        status: 'Submitted',
-        createdAt: new Date().toISOString(),
-        userId: 1,
-        userName: 'You'
-      };
-      setIssues(prev => [mockIssue, ...prev]);
-    } finally {
-      setShowForm(false);
-      setFormData({ title: '', description: '', location: '', category: 'Road Maintenance' });
+      const response = await issueAPI.create(data);
+      setIssues((prev) => [toIssueView(response.data.issue), ...prev]);
+      setFormData({ title: '', description: '', location: '', lat: '', lng: '' });
       setImageFile(null);
       setImagePreview(null);
+      setShowForm(false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not submit the report. Check that the backend is running and try again.');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -134,6 +126,12 @@ const Dashboard = () => {
       </div>
       <div className="container mx-auto px-4 py-8">
 
+        {error && (
+          <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
+            {error}
+          </div>
+        )}
+
         {showForm && (
           <div className="bg-white rounded-2xl shadow-md border border-emerald-100 p-6 mb-8">
             <h2 className="text-2xl font-semibold mb-4 text-emerald-800">Report an Issue</h2>
@@ -171,22 +169,9 @@ const Dashboard = () => {
                 required
               />
 
-              <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-2">
-                  Category <span className="text-danger">*</span>
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option>Road Maintenance</option>
-                  <option>Public Safety</option>
-                  <option>Sanitation</option>
-                  <option>Infrastructure</option>
-                  <option>Other</option>
-                </select>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Input label="Latitude" type="number" step="any" name="lat" value={formData.lat} onChange={handleChange} placeholder="e.g. 22.3072" required />
+                <Input label="Longitude" type="number" step="any" name="lng" value={formData.lng} onChange={handleChange} placeholder="e.g. 73.1812" required />
               </div>
 
               <div className="mb-4">

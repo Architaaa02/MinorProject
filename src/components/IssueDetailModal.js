@@ -1,8 +1,8 @@
 import React from 'react';
 import StatusBadge from './StatusBadge';
-import { DEPARTMENTS, STATUSES } from '../utils/mockData';
+import { STATUSES } from '../utils/mockData';
 
-const IssueDetailModal = ({ issue, onClose, onStatusChange, onDepartmentChange }) => {
+const IssueDetailModal = ({ issue, onClose, onStatusChange }) => {
   if (!issue) return null;
 
   return (
@@ -48,13 +48,13 @@ const IssueDetailModal = ({ issue, onClose, onStatusChange, onDepartmentChange }
               <p className="text-gray-700 mt-1">{issue.location}</p>
             </div>
             <div>
-              <span className="text-gray-400 font-medium">Date Reported</span>
-              <p className="text-gray-700 mt-1">{new Date(issue.createdAt).toLocaleDateString()}</p>
+              <span className="text-gray-400 font-medium">Department</span>
+              <p className="text-gray-700 mt-1">{issue.department || 'Unassigned'}</p>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+          <div className="pt-2 border-t">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Update Status</label>
               <select
@@ -63,16 +63,6 @@ const IssueDetailModal = ({ issue, onClose, onStatusChange, onDepartmentChange }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {STATUSES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assign Department</label>
-              <select
-                value={issue.department || 'Unassigned'}
-                onChange={(e) => onDepartmentChange(issue.id, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
               </select>
             </div>
           </div>

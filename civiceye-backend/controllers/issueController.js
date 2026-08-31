@@ -26,7 +26,7 @@ async function saveImageToDisk(file) {
  * -> store -> dispatch routing notification.
  */
 const createIssue = asyncHandler(async (req, res) => {
-  const { description, lat, lng, address } = req.body;
+  const { title, description, lat, lng, address } = req.body;
 
   if (!req.file) {
     res.status(400);
@@ -35,6 +35,10 @@ const createIssue = asyncHandler(async (req, res) => {
   if (lat === undefined || lng === undefined) {
     res.status(400);
     throw new Error('lat and lng are required');
+  }
+  if (!title || !title.trim()) {
+    res.status(400);
+    throw new Error('title is required');
   }
 
   const latitude = Number(lat);
@@ -65,6 +69,7 @@ const createIssue = asyncHandler(async (req, res) => {
   // Step 9: Store the annotated complaint record in MongoDB
   const issue = new Issue({
     citizen: req.user._id,
+    title: title.trim(),
     description,
     imageUrl,
     location: {

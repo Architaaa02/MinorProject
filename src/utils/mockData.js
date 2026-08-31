@@ -87,5 +87,5 @@ export const mockStats = {
 };
 
 export const DEPARTMENTS = ['Unassigned', 'Public Works', 'Electrical', 'Sanitation', 'Water & Sewage', 'Traffic'];
-export const CATEGORIES = ['Road Maintenance', 'Public Safety', 'Sanitation', 'Infrastructure', 'Other'];
+export const CATEGORIES = ['Road Damage', 'Drainage Problem', 'Illegal Dumping', 'Streetlight Failure', 'Fallen Tree', 'Other'];
 export const STATUSES = ['Submitted', 'In Progress', 'Resolved', 'Rejected'];

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { issueAPI } from '../services/api';
-import { mockIssues, mockStats, CATEGORIES, STATUSES } from '../utils/mockData';
+import { issueAPI, toIssueView } from '../services/api';
+import { CATEGORIES, STATUSES } from '../utils/mockData';
 import StatusBadge from '../components/StatusBadge';
 import Loading from '../components/Loading';
 import IssueDetailModal from '../components/IssueDetailModal';
@@ -69,7 +69,6 @@ const Sidebar = ({ active, setActive, onLogout, sidebarOpen, setSidebarOpen }) =
 
 const AdminDashboard = () => {
   const [issues, setIssues] = useState([]);
-  const [stats, setStats] = useState(mockStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [active, setActive] = useState('Dashboard');
@@ -90,12 +89,10 @@ const AdminDashboard = () => {
     setLoading(true);
     setError('');
     try {
-      const [issuesRes, statsRes] = await Promise.all([issueAPI.getAll(), issueAPI.getStats()]);
-      setIssues(issuesRes.data);
-      setStats(statsRes.data);
-    } catch {
-      setIssues(mockIssues);
-      setStats(mockStats);
+      const issuesRes = await issueAPI.getAll();
+      setIssues((issuesRes.data.issues || []).map(toIssueView));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not load issue data.');
     } finally {
       setLoading(false);
     }
@@ -104,22 +101,22 @@ const AdminDashboard = () => {
   const handleLogout = () => { logout(); navigate('/admin/login'); };
 
   const handleStatusChange = async (id, status) => {
-    try { await issueAPI.updateStatus(id, status); } catch { /* mock fallback */ }
-    setIssues(prev => prev.map(i => i.id === id ? { ...i, status } : i));
-    setSelectedIssue(prev => prev?.id === id ? { ...prev, status } : prev);
-  };
-
-  const handleDepartmentChange = (id, department) => {
-    setIssues(prev => prev.map(i => i.id === id ? { ...i, department } : i));
-    setSelectedIssue(prev => prev?.id === id ? { ...prev, department } : prev);
+    try {
+      const response = await issueAPI.updateStatus(id, status);
+      const updatedIssue = toIssueView(response.data.issue);
+      setIssues(prev => prev.map(i => i.id === id ? { ...i, ...updatedIssue } : i));
+      setSelectedIssue(prev => prev?.id === id ? { ...prev, ...updatedIssue } : prev);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update this issue.');
+    }
   };
 
   const filtered = useMemo(() => {
     return issues.filter(issue => {
       const matchSearch = search === '' ||
-        issue.title.toLowerCase().includes(search.toLowerCase()) ||
-        issue.location.toLowerCase().includes(search.toLowerCase()) ||
-        issue.userName.toLowerCase().includes(search.toLowerCase());
+        issue.title?.toLowerCase().includes(search.toLowerCase()) ||
+        issue.location?.toLowerCase().includes(search.toLowerCase()) ||
+        issue.userName?.toLowerCase().includes(search.toLowerCase());
       const matchStatus = filterStatus === 'All' || issue.status === filterStatus;
       const matchCategory = filterCategory === 'All' || issue.category === filterCategory;
       return matchSearch && matchStatus && matchCategory;
@@ -388,7 +385,6 @@ const AdminDashboard = () => {
           issue={selectedIssue}
           onClose={() => setSelectedIssue(null)}
           onStatusChange={handleStatusChange}
-          onDepartmentChange={handleDepartmentChange}
         />
       )}
     </div>

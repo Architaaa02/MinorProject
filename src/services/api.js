@@ -6,6 +6,22 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
+
+// The API returns geographic data as an object while the existing UI renders a
+// human-readable address. Keep that translation in one place so every screen
+// consumes the same stable shape.
+export const toIssueView = (issue) => ({
+  ...issue,
+  id: issue.id || issue._id,
+  title: issue.title || issue.description?.slice(0, 60) || 'Untitled issue',
+  location: issue.location?.address || issue.location || 'Location unavailable',
+  userName: issue.citizen?.name || issue.userName || 'Citizen',
+  imageUrl: issue.imageUrl?.startsWith('http')
+    ? issue.imageUrl
+    : `${API_ORIGIN}${issue.imageUrl || ''}`,
+});
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
